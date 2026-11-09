@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="light dark">
+<title>打开应用</title>
+<style>
+  :root {
+    --bg1: #f4f7ff; --bg2: #e6eeff; --card: #ffffff; --text: #14161a; --sub: #6b7280; --line: #e6e8ee;
+    --primary: #2f6bff; --primary2: #5b8dff; --danger: #e5484d; --ok: #2fb344;
+    --pill: #eef2ff; --pilltext: #3b4a7a; --shadow: 0 14px 44px rgba(30, 50, 110, .14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg1: #0d1117; --bg2: #131a27; --card: #171d29; --text: #eef1f6; --sub: #9aa4b2; --line: #272f3f;
+      --primary: #4c82ff; --primary2: #7aa2ff; --pill: #1f2842; --pilltext: #b9c6f0; --shadow: 0 14px 44px rgba(0, 0, 0, .5);
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; padding: 24px; display: flex; align-items: center; justify-content: center;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+    color: var(--text); background: linear-gradient(160deg, var(--bg1), var(--bg2)); background-attachment: fixed;
+  }
+  .card {
+    width: 100%; max-width: 380px; padding: 38px 24px 22px; text-align: center;
+    background: var(--card); border-radius: 26px; box-shadow: var(--shadow);
+    animation: rise .42s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+  .icon {
+    position: relative;
+    width: 78px; height: 78px; margin: 0 auto 22px; border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--primary2), var(--primary)); box-shadow: 0 10px 22px rgba(47, 107, 255, .34);
+  }
+  .icon svg { width: 38px; height: 38px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  [data-state="opening"] .icon::after {
+    content: ""; position: absolute; inset: -6px; border-radius: 30px; border: 2px solid var(--primary);
+    opacity: 0; animation: ring 1.5s ease-out infinite;
+  }
+  @keyframes ring { 0% { opacity: .55; transform: scale(.9); } 100% { opacity: 0; transform: scale(1.2); } }
+  .icon .ic { display: none; }
+  [data-state="opening"] .ic-open, [data-state="idle"] .ic-open,
+  [data-state="done"] .ic-done, [data-state="error"] .ic-err { display: block; }
+  [data-state="done"] .icon { background: linear-gradient(135deg, #72d98a, var(--ok)); box-shadow: 0 10px 22px rgba(47, 179, 68, .32); }
+  [data-state="error"] .icon { background: linear-gradient(135deg, #ff8f92, var(--danger)); box-shadow: 0 10px 22px rgba(229, 72, 77, .3); }
+  h1 { margin: 0 0 8px; font-size: 22px; font-weight: 650; letter-spacing: .2px; }
+  .sub { margin: 0; min-height: 24px; color: var(--sub); font-size: 15px; line-height: 1.6; }
+  .pill {
+    display: inline-block; margin-top: 16px; padding: 6px 13px; border-radius: 999px;
+    background: var(--pill); color: var(--pilltext); font: 500 13px ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .dots { display: none; justify-content: center; gap: 8px; height: 20px; margin: 20px 0 2px; }
+  [data-state="opening"] .dots { display: flex; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); opacity: .25; animation: bounce 1s infinite ease-in-out; }
+  .dots i:nth-child(2) { animation-delay: .15s; }
+  .dots i:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%, 80%, 100% { opacity: .25; transform: scale(.85); } 40% { opacity: 1; transform: scale(1.15); } }
+  .btn {
+    display: block; width: 100%; margin-top: 24px; padding: 16px 0; border-radius: 15px;
+    background: linear-gradient(135deg, var(--primary2), var(--primary)); color: #fff; text-decoration: none;
+    font-size: 17px; font-weight: 600; box-shadow: 0 8px 18px rgba(47, 107, 255, .3);
+  }
+  .btn:active { transform: scale(.98); opacity: .92; }
+  [data-state="opening"] .btn, [data-state="done"] .btn { background: transparent; color: var(--primary); box-shadow: none; border: 1.5px solid var(--line); }
+  [data-state="error"] .btn, [data-state="error"] .pill { display: none; }
+  .hint { margin: 16px 6px 0; color: var(--sub); font-size: 13px; line-height: 1.65; }
+  .foot { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--sub); font-size: 12px; }
+  .pv { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 6px; justify-content: center; padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); background: rgba(0, 0, 0, .55); }
+  .pv button { padding: 8px 12px; border: 0; border-radius: 8px; font-size: 13px; background: #fff; color: #111; }
+  .pv button.on { background: var(--primary); color: #fff; }
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .card, .icon::after, .dots i { animation: none !important; } }
+</style>
+</head>
+<body>
+<main class="card" id="card" data-state="opening">
+  <div class="icon">
+    <svg class="ic ic-open" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+    <svg class="ic ic-done" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    <svg class="ic ic-err" viewBox="0 0 24 24"><path d="M12 7v6.5"/><path d="M12 17.2h.01"/></svg>
+  </div>
+  <h1 id="title">正在打开应用…</h1>
+  <p class="sub" id="sub"></p>
+  <div class="pill" id="pill"></div>
+  <div class="dots"><i></i><i></i><i></i></div>
+  <a class="btn" id="open" href="#">打开应用</a>
+  <p class="hint" id="hint"></p>
+  <div class="foot">仅用于打开应用 · 页面不收集任何信息</div>
+</main>
+<div class="pv hidden" id="pv"></div>
+<script>
+(function () {
+  // 通用跳转页：把完整的 scheme 链接放在网址的 # 之后，例如  …/#myapp://path?x=1
+  // # 之后的内容浏览器不会发给服务器；本页面是纯静态的，不含任何秘密，也不绑定任何具体的 App。
+  // 安全：拒绝网页类和少数危险的 scheme（BLOCKED，小写、不带 ://），并限制目标的字符集与长度，
+  // 避免被当成“开放跳转”滥用；其余 scheme 直接放行。
+  var BLOCKED = ['http', 'https', 'ftp', 'ws', 'wss', 'javascript', 'data', 'file', 'blob', 'about', 'vbscript', 'itms-services'];
+
+  function parseTarget(hash, blocked) {
+    var t = hash.charAt(0) === '#' ? hash.slice(1) : hash;
+    var m = t.match(/^([a-z][a-z0-9+.\-]*):\/\/[A-Za-z0-9_\-.\/?=&%:~+]{0,512}$/);
+    if (!m) return null;
+    if (blocked.indexOf(m[1]) >= 0) return null;
+    return { scheme: m[1], url: t };
+  }
+
+  if (typeof document === 'undefined') { // 供命令行单元测试
+    module.exports = { parseTarget: parseTarget };
+    return;
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var card = $('card');
+  var TEXT = {
+    opening: ['正在打开应用…', '请稍候，系统可能会询问是否打开', ''],
+    idle: ['没有自动打开？', '点下面的按钮手动打开', '系统询问是否打开应用时，请点「打开」。'],
+    done: ['已回到此页面', '如果你已经在应用里完成了操作，可以关闭此页面。', ''],
+    error: ['无法打开', '', '请回到发起这个链接的地方，重新点击一次。']
+  };
+
+  function render(state, msg) {
+    card.setAttribute('data-state', state);
+    $('title').textContent = TEXT[state][0];
+    $('sub').textContent = state === 'error' ? (msg || '') : TEXT[state][1];
+    $('hint').textContent = TEXT[state][2];
+    $('open').textContent = state === 'done' ? '再次打开应用' : '打开应用';
+  }
+
+  var hash = location.hash;
+  var pv = hash.match(/^#preview(?:=(opening|idle|done|error))?$/);
+  if (pv) { // 预览：只看各状态的样子，不跳转
+    $('pill').textContent = 'myapp://';
+    var cur = pv[1] || 'opening';
+    var bar = $('pv');
+    bar.classList.remove('hidden');
+    [['opening', '打开中'], ['idle', '未自动打开'], ['done', '已返回'], ['error', '出错']].forEach(function (s) {
+      var b = document.createElement('button');
+      b.textContent = s[1];
+      b.onclick = function () {
+        render(s[0], '不支持的跳转目标，或链接不完整。');
+        Array.prototype.forEach.call(bar.children, function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+      };
+      if (s[0] === cur) b.classList.add('on');
+      bar.appendChild(b);
+    });
+    render(cur, '不支持的跳转目标，或链接不完整。');
+    return;
+  }
+
+  var target = parseTarget(hash, BLOCKED);
+  if (!target) { render('error', '不支持的跳转目标，或链接不完整。'); return; }
+
+  $('pill').textContent = target.scheme + '://';
+  $('open').setAttribute('href', target.url);
+  render('opening');
+  var left = false;
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') left = true;
+    else if (left) render('done');
+  });
+  setTimeout(function () { if (!left) render('idle'); }, 1800);
+  setTimeout(function () { location.href = target.url; }, 300);
+})();
+</script>
+</body>
+</html>
